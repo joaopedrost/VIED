@@ -1,7 +1,7 @@
 /*
  * static_model.c
  *
- * automatically generated from VIED_KEP1.CID
+ * automatically generated from VIED_KEP1_test.CID
  */
 #include "static_model.h"
 
@@ -117127,9 +117127,13 @@ DataAttribute iedModel_ANN_RAGGIO27_Ra128_dataNs = {
 
 extern ReportControlBlock iedModel_CFG_LLN0_report0;
 extern ReportControlBlock iedModel_CFG_LLN0_report1;
+extern ReportControlBlock iedModel_CFG_LLN0_report2;
+extern ReportControlBlock iedModel_CFG_LLN0_report3;
 
 ReportControlBlock iedModel_CFG_LLN0_report0 = {&iedModel_CFG_LLN0, "Medicao", "DSet12", false, "DSet07", 3, 19, 175, 250, 0, {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, &iedModel_CFG_LLN0_report1};
-ReportControlBlock iedModel_CFG_LLN0_report1 = {&iedModel_CFG_LLN0, "breaker_status", "VIED_TEST1", false, "DSet13", 2, 27, 15, 250, 0, {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, NULL};
+ReportControlBlock iedModel_CFG_LLN0_report1 = {&iedModel_CFG_LLN0, "breaker_status", "VIED_TEST1", false, "DSet13", 2, 27, 15, 250, 0, {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, &iedModel_CFG_LLN0_report2};
+ReportControlBlock iedModel_CFG_LLN0_report2 = {&iedModel_CFG_LLN0, "midicao2", "VIED_TEST1", true, "DSet01", 2, 27, 111, 500, 0, {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, &iedModel_CFG_LLN0_report3};
+ReportControlBlock iedModel_CFG_LLN0_report3 = {&iedModel_CFG_LLN0, "medicao2", "VIED_TEST1", true, "DSet13", 2, 27, 111, 500, 0, {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, NULL};
 
 
 extern GSEControlBlock iedModel_CFG_LLN0_gse0;
