@@ -2,7 +2,7 @@
 <SCL xmlns:esel="http://www.selinc.com/2006/61850" version="2007" revision="B" xmlns="http://www.iec.ch/61850/2003/SCL">
   <Header id="New Project" version="0" revision="1.0" toolID="AcSELerator Architect 2.3.17.16">
     <History>
-      <Hitem version="0" revision="1.0" when="04/10/2025 11:21:33" who="GREI_PC_MALA\GREI" what="IED exported from Project New Project" />
+      <Hitem version="0" revision="1.0" when="04/10/2025 15:58:00" who="GREI_PC_MALA\GREI" what="IED exported from Project New Project" />
     </History>
   </Header>
   <Communication>
@@ -18,8 +18,8 @@
         </Address>
         <GSE ldInst="CFG" cbName="GOOSE_POWER">
           <Address>
-            <P type="MAC-Address">01-0C-CD-01-00-09</P>
-            <P type="APPID">0009</P>
+            <P type="MAC-Address">01-0C-CD-01-00-06</P>
+            <P type="APPID">0006</P>
             <P type="VLAN-PRIORITY">4</P>
             <P type="VLAN-ID">003</P>
           </Address>
@@ -28,8 +28,8 @@
         </GSE>
         <GSE ldInst="CFG" cbName="GOOSE_STATUS">
           <Address>
-            <P type="MAC-Address">01-0C-CD-01-00-0A</P>
-            <P type="APPID">000A</P>
+            <P type="MAC-Address">01-0C-CD-01-00-07</P>
+            <P type="APPID">0007</P>
             <P type="VLAN-PRIORITY">4</P>
             <P type="VLAN-ID">003</P>
           </Address>
@@ -38,8 +38,8 @@
         </GSE>
         <GSE ldInst="CFG" cbName="CONTROL_BK">
           <Address>
-            <P type="MAC-Address">01-0C-CD-01-00-0B</P>
-            <P type="APPID">000B</P>
+            <P type="MAC-Address">01-0C-CD-01-00-08</P>
+            <P type="APPID">0008</P>
             <P type="VLAN-PRIORITY">4</P>
             <P type="VLAN-ID">003</P>
           </Address>
@@ -54,7 +54,7 @@
       <esel:ModelNumber>SEL-751</esel:ModelNumber>
       <esel:ClassFileVersion>004</esel:ClassFileVersion>
       <esel:ClassFileDescription default="true">SEL751 R105 and earlier</esel:ClassFileDescription>
-      <esel:IcdFilePath>C:\Users\GREI\AppData\Local\SEL\AcSELerator\Architect\Palette\VIED_21L1.icd</esel:IcdFilePath>
+      <esel:IcdFilePath>C:\Users\GREI\AppData\Local\SEL\AcSELerator\Architect\Palette\VIED_KEP1_test.CID</esel:IcdFilePath>
       <esel:CidSentTime>08/10/2021 14:50:22</esel:CidSentTime>
     </Private>
     <Private type="SEL_IedResources">
@@ -599,15 +599,22 @@
               <FCDA ldInst="PRO" prefix="TRIP" lnClass="PTRC" lnInst="1" doName="Tr" daName="general" fc="ST" />
               <FCDA ldInst="PRO" prefix="BK1" lnClass="XCBR" lnInst="1" doName="Pos" daName="stVal" fc="ST" />
             </DataSet>
-            <ReportControl desc="Predefined Unbuffered Report 05" name="Medicao" datSet="DSet07" rptID="DSet11" confRev="2" bufTime="250" indexed="false">
+            <ReportControl desc="Predefined Unbuffered Report 06" name="Medicao" datSet="DSet07" rptID="DSet12" confRev="3" bufTime="250" indexed="false">
               <TrgOps dchg="true" qchg="true" />
               <OptFields seqNum="true" timeStamp="true" dataSet="true" reasonCode="true" configRef="true" />
               <RptEnabled />
             </ReportControl>
-            <ReportControl desc="Predefined Unbuffered Report 06" name="Protecao" datSet="DSet13" rptID="DSet12" confRev="2" bufTime="250" indexed="false">
-              <TrgOps dchg="true" qchg="true" />
-              <OptFields seqNum="true" timeStamp="true" dataSet="true" reasonCode="true" configRef="true" />
-              <RptEnabled />
+            <ReportControl name="breaker_status" datSet="DSet13" rptID="VIED_TEST1" confRev="2" bufTime="250" indexed="false">
+              <TrgOps dchg="true" qchg="true" period="true" />
+              <OptFields seqNum="true" timeStamp="true" dataSet="true" reasonCode="true" bufOvfl="false" />
+            </ReportControl>
+            <ReportControl name="midicao2" datSet="DSet01" rptID="VIED_TEST1" confRev="2" buffered="true" bufTime="500" indexed="false">
+              <TrgOps dchg="true" qchg="true" period="true" />
+              <OptFields seqNum="true" timeStamp="true" dataSet="true" reasonCode="true" entryID="true" />
+            </ReportControl>
+            <ReportControl name="medicao2" datSet="DSet13" rptID="VIED_TEST1" confRev="2" buffered="true" bufTime="500" indexed="false">
+              <TrgOps dchg="true" qchg="true" period="true" />
+              <OptFields seqNum="true" timeStamp="true" dataSet="true" reasonCode="true" entryID="true" />
             </ReportControl>
             <DOI name="Mod">
               <DAI esel:datasrc="db:RELAY_EN?5:1" name="stVal" />
@@ -640,8 +647,8 @@
             <GSEControl desc="Mensagens Analógicas de Potência" name="GOOSE_POWER" datSet="POWER_SH" confRev="2" appID="VIED_21L1">
               <Private type="SEL_GOOSETXAddress">
                 <esel:Address>
-                  <esel:P type="MAC-Address">01-0C-CD-01-00-09</esel:P>
-                  <esel:P type="APPID">0009</esel:P>
+                  <esel:P type="MAC-Address">01-0C-CD-01-00-06</esel:P>
+                  <esel:P type="APPID">0006</esel:P>
                   <esel:P type="VLAN-ID">003</esel:P>
                   <esel:P type="VLAN-PRIORITY">4</esel:P>
                 </esel:Address>
@@ -656,8 +663,8 @@
             <GSEControl desc="Status BK e Trip" name="GOOSE_STATUS" datSet="STATUS_VIED" confRev="2" appID="VIED_21L1">
               <Private type="SEL_GOOSETXAddress">
                 <esel:Address>
-                  <esel:P type="MAC-Address">01-0C-CD-01-00-0A</esel:P>
-                  <esel:P type="APPID">000A</esel:P>
+                  <esel:P type="MAC-Address">01-0C-CD-01-00-07</esel:P>
+                  <esel:P type="APPID">0007</esel:P>
                   <esel:P type="VLAN-ID">003</esel:P>
                   <esel:P type="VLAN-PRIORITY">4</esel:P>
                 </esel:Address>
@@ -672,8 +679,8 @@
             <GSEControl desc="Controle de MU" name="CONTROL_BK" datSet="CONTROL_MU" confRev="2" appID="VIED_21L1">
               <Private type="SEL_GOOSETXAddress">
                 <esel:Address>
-                  <esel:P type="MAC-Address">01-0C-CD-01-00-0B</esel:P>
-                  <esel:P type="APPID">000B</esel:P>
+                  <esel:P type="MAC-Address">01-0C-CD-01-00-08</esel:P>
+                  <esel:P type="APPID">0008</esel:P>
                   <esel:P type="VLAN-ID">003</esel:P>
                   <esel:P type="VLAN-PRIORITY">4</esel:P>
                 </esel:Address>
