@@ -127,8 +127,6 @@ static int funcoes, curva_51, curva_51V, curva_51N, curva_67, curva_67N;
 static float pick_up_50, pick_up_50N, pick_up_51, pick_up_51V, pick_up_51N, pick_up_67, pick_up_67N, atm_67, atm_67N;
 static float dial_51, dial_51V, dial_51N, dial_67, dial_67N, tensao_51V;
 
-static float a, b, c, d, e, f, g, h, i;
-
 void sigint_handler(int signalId)
 {
 	running = 0;
@@ -154,7 +152,6 @@ void funcao_50()
 {
     while (1)
     {
-
         if (corrente_primarioA > pick_up_50)
         {
             printf("-------------------------------------------------------------------------------------------------------------\n");
@@ -183,8 +180,7 @@ void funcao_50()
         {
             funcao_50_62BF();
         }
-        Thread_sleep(0.1667);
-        system ("clear");
+        Thread_sleep(17);
     }
 }
 
@@ -200,8 +196,7 @@ void funcao_50N()
         IedServer_updateBooleanAttributeValue(iedServer, IEDMODEL_PRO_TRIPPTRC1_Tr_general, true);
         funcao_50_62BF();
     }
-    Thread_sleep(0.1667);
-    system ("clear");
+    Thread_sleep(17);
     }
 }
 
@@ -306,8 +301,7 @@ void funcao_51()
             }
             IedServer_updateBooleanAttributeValue(iedServer, IEDMODEL_PRO_TRIPPTRC1_Tr_general, true);
         }
-    }Thread_sleep(0.1667);
-    system ("clear");}
+    }Thread_sleep(17);}
 }
 
 void funcao_51V()
@@ -413,8 +407,7 @@ void funcao_51V()
             }
             IedServer_updateBooleanAttributeValue(iedServer, IEDMODEL_PRO_TRIPPTRC1_Tr_general, true);
         }
-    }Thread_sleep(0.1667);
-    system ("clear");}
+    }Thread_sleep(17);}
 }
 
 void funcao_51N()
@@ -441,8 +434,7 @@ void funcao_51N()
             IedServer_updateBooleanAttributeValue(iedServer, IEDMODEL_ANN_SVGGIO3_Ind13_stVal, true);
             IedServer_updateBooleanAttributeValue(iedServer, IEDMODEL_PRO_TRIPPTRC1_Tr_general, true);
         }
-    }Thread_sleep(0.1667);
-    system ("clear");}
+    }Thread_sleep(17);}
 }
 
 void funcao_67()
@@ -556,8 +548,7 @@ void funcao_67()
                 IedServer_updateBooleanAttributeValue(iedServer, IEDMODEL_PRO_TRIPPTRC1_Tr_general, true);
             }
         }
-    }Thread_sleep(0.1667);
-    system ("clear");}
+    }Thread_sleep(17);}
 }
 
 void funcao_67N()
@@ -592,8 +583,7 @@ void funcao_67N()
                 IedServer_updateBooleanAttributeValue(iedServer, IEDMODEL_PRO_TRIPPTRC1_Tr_general, true);
             }
         }
-    }Thread_sleep(16.67);
-    system ("clear");}
+    }Thread_sleep(17);}
 }
 
 
@@ -760,7 +750,7 @@ svUpdateListener (SVSubscriber subscriber, void* parameter, SVSubscriber_ASDU as
 
         contadorSV3 ++;
 
-        /*if(contadorSV3 == 60){
+        if(contadorSV3 == 60){
             system ("clear");
             printf("  svID=(%s)\n", svID);
             printf("  smpCnt: %i\n", SVSubscriber_ASDU_getSmpCnt(asdu));
@@ -786,7 +776,7 @@ svUpdateListener (SVSubscriber subscriber, void* parameter, SVSubscriber_ASDU as
             IedServer_updateFloatAttributeValue(iedServer, IEDMODEL_MET_METMMXU1_PPV_phsBC_cVal_ang_f, an[1]);
             IedServer_updateFloatAttributeValue(iedServer, IEDMODEL_MET_METMMXU1_PPV_phsCA_cVal_ang_f, an[2]);
             contadorSV3 = 0;
-        }*/
+        }
 
         contadorSV1=0;
         SVrms_deltaA=0;
@@ -881,21 +871,18 @@ goCbEventHandler(MmsGooseControlBlock goCb, int event, void* parameter)
 static void
 gooseListener(GooseSubscriber subscriber, void* parameter)
 {
-    MmsValue* values1 = GooseSubscriber_getDataSetValues(subscriber);
+    MmsValue* values = GooseSubscriber_getDataSetValues(subscriber);
 
-    char buffer1[100];
+    char buffer[50];
 
-    MmsValue_printToBuffer(values1, buffer1, 100);
+    MmsValue_printToBuffer(values, buffer, 50);
 
-    a = atof(&buffer1[1]);//21L1
-    b = atof(&buffer1[12]);//21L2
-    c = atof(&buffer1[23]);//21L3
-    d = atof(&buffer1[34]);//21L4
-    e = atof(&buffer1[45]);//21L5
-    f = atof(&buffer1[56]);//21L6
-    g = atof(&buffer1[67]);//21L7
-    h = atof(&buffer1[78]);//21L8
-    i = atof(&buffer1[89]);//21L9
+
+    char b; char c; char d;
+
+    b = buffer[1];
+    c = buffer[6];
+    d = buffer[11];
     uint64_t y = Hal_getTimeInMs();
 
     printf("-------------------------------------------------------------------------------------------------------------\n");            
@@ -909,14 +896,16 @@ gooseListener1(GooseSubscriber subscriber, void* parameter)
 {
     MmsValue* values = GooseSubscriber_getDataSetValues(subscriber);
 
-    char buffer[80];
+    char buffer[50];
 
     MmsValue_printToBuffer(values, buffer, 50);
 
 
-    char a, b, c, d, e, f, g, h, i;
+    char b; char c; char d;
 
-    
+    b = buffer[1];
+    c = buffer[6];
+    d = buffer[11];
     uint64_t y = Hal_getTimeInMs();
 
     printf("-------------------------------------------------------------------------------------------------------------\n");            
@@ -949,11 +938,10 @@ gooseListener2(GooseSubscriber subscriber, void* parameter)
         IedServer_updateDbposValue(iedServer, IEDMODEL_PRO_BK1XCBR1_Pos_stVal, DBPOS_INTERMEDIATE_STATE);
         IedServer_updateBooleanAttributeValue(iedServer, IEDMODEL_CON_RBGGIO1_SPCSO02_stVal, false);
     }
-    /*
-    printf("-------------------------------------------------------------------------------------------------------------\n");            
+
+    /*printf("-------------------------------------------------------------------------------------------------------------\n");            
     printf("                               PRIMEIRA MENSAGEM GOOSE ASSINADA VIED 3                                       \n");
-    printf("-------------------------------------------------------------------------------------------------------------\n");
-    */
+    printf("-------------------------------------------------------------------------------------------------------------\n");*/
 
 }
 
@@ -1145,14 +1133,8 @@ main(int argc, char** argv)
 
     while (running) {
 
-        IedServer_updateFloatAttributeValue(iedServer, IEDMODEL_ANN_MVGGIO12_AnIn02_mag_f, corrente_primarioA);
+        IedServer_updateFloatAttributeValue(iedServer, IEDMODEL_ANN_MVGGIO12_AnIn01_mag_f, corrente_primarioA);
         IedServer_updateBooleanAttributeValue(iedServer, IEDMODEL_ANN_INAGGIO1_Ind01_stVal, true);
-
-        if ((IedServer_getBooleanAttributeValue(iedServer, IEDMODEL_PRO_TRIPPTRC1_Tr_general)) == true){
-            IedServer_updateBooleanAttributeValue(iedServer, IEDMODEL_CON_RBGGIO1_SPCSO01_stVal, false);
-            IedServer_updateBooleanAttributeValue(iedServer, IEDMODEL_CON_RBGGIO1_SPCSO02_stVal, true);
-        }
-
         Thread_sleep(17);
 
     }

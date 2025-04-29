@@ -1,7 +1,7 @@
 /*
  * static_model.h
  *
- * automatically generated from VIED_KEP2.CID
+ * automatically generated from VIED_KEP2_1.CID
  */
 
 #ifndef STATIC_MODEL_H_

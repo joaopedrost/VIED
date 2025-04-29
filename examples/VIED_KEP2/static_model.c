@@ -1,7 +1,7 @@
 /*
  * static_model.c
  *
- * automatically generated from VIED_KEP2.CID
+ * automatically generated from VIED_KEP2_1.CID
  */
 #include "static_model.h"
 
@@ -24,6 +24,7 @@ extern DataSet iedModelds_CFG_LLN0_GOOSE_EDITOR;
 extern DataSet iedModelds_CFG_LLN0_POWER_SH;
 extern DataSet iedModelds_CFG_LLN0_CONTROL_MU;
 extern DataSet iedModelds_CFG_LLN0_STATUS_VIED;
+extern DataSet iedModelds_CFG_LLN0_Protecao;
 
 
 extern DataSetEntry iedModelds_CFG_LLN0_DSet01_fcda0;
@@ -5203,6 +5204,48 @@ DataSet iedModelds_CFG_LLN0_STATUS_VIED = {
   "LLN0$STATUS_VIED",
   2,
   &iedModelds_CFG_LLN0_STATUS_VIED_fcda0,
+  &iedModelds_CFG_LLN0_Protecao
+};
+
+extern DataSetEntry iedModelds_CFG_LLN0_Protecao_fcda0;
+extern DataSetEntry iedModelds_CFG_LLN0_Protecao_fcda1;
+extern DataSetEntry iedModelds_CFG_LLN0_Protecao_fcda2;
+
+DataSetEntry iedModelds_CFG_LLN0_Protecao_fcda0 = {
+  "PRO",
+  false,
+  "P1TPIOC1$ST$Str", 
+  -1,
+  NULL,
+  NULL,
+  &iedModelds_CFG_LLN0_Protecao_fcda1
+};
+
+DataSetEntry iedModelds_CFG_LLN0_Protecao_fcda1 = {
+  "PRO",
+  false,
+  "P1TPIOC1$ST$Op", 
+  -1,
+  NULL,
+  NULL,
+  &iedModelds_CFG_LLN0_Protecao_fcda2
+};
+
+DataSetEntry iedModelds_CFG_LLN0_Protecao_fcda2 = {
+  "PRO",
+  false,
+  "TRIPPTRC1$ST$Tr", 
+  -1,
+  NULL,
+  NULL,
+  NULL
+};
+
+DataSet iedModelds_CFG_LLN0_Protecao = {
+  "CFG",
+  "LLN0$Protecao",
+  3,
+  &iedModelds_CFG_LLN0_Protecao_fcda0,
   NULL
 };
 
@@ -117128,12 +117171,10 @@ DataAttribute iedModel_ANN_RAGGIO27_Ra128_dataNs = {
 extern ReportControlBlock iedModel_CFG_LLN0_report0;
 extern ReportControlBlock iedModel_CFG_LLN0_report1;
 extern ReportControlBlock iedModel_CFG_LLN0_report2;
-extern ReportControlBlock iedModel_CFG_LLN0_report3;
 
-ReportControlBlock iedModel_CFG_LLN0_report0 = {&iedModel_CFG_LLN0, "Medicao", "DSet12", false, "DSet07", 3, 19, 175, 250, 0, {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, &iedModel_CFG_LLN0_report1};
-ReportControlBlock iedModel_CFG_LLN0_report1 = {&iedModel_CFG_LLN0, "breaker_status", "VIED_TEST1", false, "DSet13", 2, 27, 15, 250, 0, {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, &iedModel_CFG_LLN0_report2};
-ReportControlBlock iedModel_CFG_LLN0_report2 = {&iedModel_CFG_LLN0, "midicao2", "VIED_TEST1", true, "DSet01", 2, 27, 111, 500, 0, {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, &iedModel_CFG_LLN0_report3};
-ReportControlBlock iedModel_CFG_LLN0_report3 = {&iedModel_CFG_LLN0, "medicao2", "VIED_TEST1", true, "DSet13", 2, 27, 111, 500, 0, {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, NULL};
+ReportControlBlock iedModel_CFG_LLN0_report0 = {&iedModel_CFG_LLN0, "Medicao", "DSet11", false, "DSet07", 2, 19, 175, 250, 0, {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, &iedModel_CFG_LLN0_report1};
+ReportControlBlock iedModel_CFG_LLN0_report1 = {&iedModel_CFG_LLN0, "Protecao", "DSet12", false, "DSet13", 2, 19, 175, 250, 0, {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, &iedModel_CFG_LLN0_report2};
+ReportControlBlock iedModel_CFG_LLN0_report2 = {&iedModel_CFG_LLN0, "protecao_pioc", "VIED_KEP2", false, "DSet01", 1, 27, 15, 250, 0, {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, NULL};
 
 
 extern GSEControlBlock iedModel_CFG_LLN0_gse0;
@@ -117143,8 +117184,8 @@ extern GSEControlBlock iedModel_CFG_LLN0_gse2;
 static PhyComAddress iedModel_CFG_LLN0_gse0_address = {
   4,
   3,
-  6,
-  {0x1, 0xc, 0xcd, 0x1, 0x0, 0x6}
+  9,
+  {0x1, 0xc, 0xcd, 0x1, 0x0, 0x9}
 };
 
 GSEControlBlock iedModel_CFG_LLN0_gse0 = {&iedModel_CFG_LLN0, "GOOSE_POWER", "VIED_21L1", "POWER_SH", 2, false, &iedModel_CFG_LLN0_gse0_address, 4, 1000, &iedModel_CFG_LLN0_gse1};
@@ -117152,8 +117193,8 @@ GSEControlBlock iedModel_CFG_LLN0_gse0 = {&iedModel_CFG_LLN0, "GOOSE_POWER", "VI
 static PhyComAddress iedModel_CFG_LLN0_gse1_address = {
   4,
   3,
-  7,
-  {0x1, 0xc, 0xcd, 0x1, 0x0, 0x7}
+  10,
+  {0x1, 0xc, 0xcd, 0x1, 0x0, 0xa}
 };
 
 GSEControlBlock iedModel_CFG_LLN0_gse1 = {&iedModel_CFG_LLN0, "GOOSE_STATUS", "VIED_21L1", "STATUS_VIED", 2, false, &iedModel_CFG_LLN0_gse1_address, 4, 1000, &iedModel_CFG_LLN0_gse2};
@@ -117161,8 +117202,8 @@ GSEControlBlock iedModel_CFG_LLN0_gse1 = {&iedModel_CFG_LLN0, "GOOSE_STATUS", "V
 static PhyComAddress iedModel_CFG_LLN0_gse2_address = {
   4,
   3,
-  8,
-  {0x1, 0xc, 0xcd, 0x1, 0x0, 0x8}
+  11,
+  {0x1, 0xc, 0xcd, 0x1, 0x0, 0xb}
 };
 
 GSEControlBlock iedModel_CFG_LLN0_gse2 = {&iedModel_CFG_LLN0, "CONTROL_BK", "VIED_21L1", "CONTROL_MU", 2, false, &iedModel_CFG_LLN0_gse2_address, 4, 1000, NULL};
