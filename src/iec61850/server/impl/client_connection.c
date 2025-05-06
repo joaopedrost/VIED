@@ -1,7 +1,7 @@
 /*
  *  client_connection.c
  *
- *  Copyright 2013, 2014, 2015 Michael Zillgith
+ *  Copyright 2013-2024 Michael Zillgith
  *
  *  This file is part of libIEC61850.
  *
@@ -32,8 +32,8 @@
 
 #include "libiec61850_platform_includes.h"
 
-struct sClientConnection {
-
+struct sClientConnection
+{
 #if (CONFIG_MMS_THREADLESS_STACK != 1)
     Semaphore tasksCountMutex;
 #endif
@@ -47,12 +47,15 @@ private_ClientConnection_create(void* serverConnectionHandle)
 {
     ClientConnection self = (ClientConnection) GLOBAL_MALLOC(sizeof(struct sClientConnection));
 
+    if (self)
+    {
 #if (CONFIG_MMS_THREADLESS_STACK != 1)
-    self->tasksCountMutex = Semaphore_create(1);
+        self->tasksCountMutex = Semaphore_create(1);
 #endif
 
-    self->tasksCount = 0;
-    self->serverConnectionHandle = serverConnectionHandle;
+        self->tasksCount = 0;
+        self->serverConnectionHandle = serverConnectionHandle;
+    }
 
     return self;
 }
@@ -60,11 +63,14 @@ private_ClientConnection_create(void* serverConnectionHandle)
 void
 private_ClientConnection_destroy(ClientConnection self)
 {
+    if (self)
+    {
 #if (CONFIG_MMS_THREADLESS_STACK != 1)
-    Semaphore_destroy(self->tasksCountMutex);
+        Semaphore_destroy(self->tasksCountMutex);
 #endif
 
-    GLOBAL_FREEMEM(self);
+        GLOBAL_FREEMEM(self);
+    }
 }
 
 int
@@ -118,7 +124,6 @@ private_ClientConnection_getServerConnectionHandle(ClientConnection self)
 {
     return self->serverConnectionHandle;
 }
-
 
 const char*
 ClientConnection_getPeerAddress(ClientConnection self)

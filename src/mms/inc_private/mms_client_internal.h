@@ -95,6 +95,8 @@ struct sMmsConnection {
 
     Semaphore outstandingCallsLock;
     MmsOutstandingCall outstandingCalls;
+    int maxOutstandingCalled;
+    int maxOutstandingCalling;
 
     uint32_t requestTimeout;
     uint32_t connectTimeout;
@@ -273,6 +275,11 @@ mmsClient_createWriteRequestArray(uint32_t invokeId, const char* domainId, const
         MmsValue* value, ByteBuffer* writeBuffer);
 
 LIB61850_INTERNAL int
+mmsClient_createWriteRequestComponent(uint32_t invokeId, const char* domainId, const char* itemId, const char* component,
+        MmsValue* value,
+        ByteBuffer* writeBuffer);
+
+LIB61850_INTERNAL int
 mmsClient_createWriteRequestAlternateAccessSingleIndexComponent(uint32_t invokeId, const char* domainId, const char* itemId,
         uint32_t arrayIndex, const char* component,
         MmsValue* value,
@@ -291,7 +298,7 @@ mmsClient_createDeleteNamedVariableListRequest(long invokeId, ByteBuffer* writeB
         const char* domainId, const char* listNameId);
 
 LIB61850_INTERNAL bool
-mmsClient_parseDeleteNamedVariableListResponse(ByteBuffer* message, uint32_t* invokeId);
+mmsClient_parseDeleteNamedVariableListResponse(ByteBuffer* message, uint32_t* invokeId, long* numberDeleted, long* numberMatched);
 
 LIB61850_INTERNAL void
 mmsClient_createDeleteAssociationSpecificNamedVariableListRequest(

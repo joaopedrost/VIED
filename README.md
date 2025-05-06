@@ -1,7 +1,5 @@
 # README libIEC61850
 
-[![Build Status](https://travis-ci.org/mz-automation/libiec61850.svg?branch=master)](https://travis-ci.org/mz-automation/libiec61850)
-
 This file is part of the documentation of **libIEC61850**. More documentation can be found online at http://libiec61850.com.
 
 The API documentation can be found here:
@@ -25,11 +23,8 @@ Content:
 * [Experimental Python bindings](#experimental-python-bindings)
 * [Licensing](#commercial-licenses-and-support)
 * [Contributing](#contributing)
-* [Third-party contributions](#third-party-contributions)
-
 
 ## Overview
-
 
 libiec61850 is an open-source (GPLv3) implementation of an IEC 61850 client and server library implementing the protocols MMS, GOOSE and SV. It is implemented in C (according to the C99 standard) to provide maximum portability. It can be used to implement IEC 61850 compliant client and server applications on embedded systems and PCs running Linux, Windows, and MacOS. Included is a set of simple example applications that can be used as a starting point to implement own IEC 61850 compliant devices or to communicate with IEC 61850 devices. The library has been successfully used in many commercial software products and devices.
 
@@ -54,8 +49,11 @@ The library support the following IEC 61850 protocol features:
 * MMS file services (browse, get file, set file, delete/rename file)
 ** required to download COMTRADE files
 * Setting group handling
+* Support for service tracking
 * GOOSE and SV control block handling
-* TLS support
+* Support for R-session protocol/R-GOOSE/R-SMV (BETA)
+* Simple SNTP client code (BETA)
+* TLS support (IEC 62351-3/4)
 * C and C#/.NET API
 
 
@@ -88,9 +86,19 @@ You can test the server examples by using a generic client or the provided clien
 
 ## Building the library with TLS support
 
-Download, unpack, and copy mbedtls-2.16 into the third_party/mbedtls folder.
+The library has an implementation agnostic interface for TLS configuration.
 
-NOTE: The current version support mbedtls version 2.16. When you download the source archive from https://tls.mbed.org/ you have to rename the extracted folder to "mbedtls-2.16".
+Currently it comes with two different implementations of this interface.
+
+One for the old mbedtls 2.28 LTS version that support TLS versions up to TLS 1.2.
+
+Another implementation support the current mbedtls 3.6.0 version. This newer mbedtls version supports only TLS 1.2 and 1.3.
+
+### mbedtls 2.28
+
+Download, unpack, and copy mbedtls-2.28 into the third_party/mbedtls folder.
+
+NOTE: The current version support mbedtls version 2.28. When you download the source archive from https://tls.mbed.org/ you have to rename the extracted folder to "mbedtls-2.28".
 
 In the main libiec61850 folder run
 
@@ -98,7 +106,21 @@ In the main libiec61850 folder run
 make WITH_MBEDTLS=1
 ```
 
-When using CMake the library is built automatically with TLS support when the folder third_party/mbedtls/mbedtls-2.16 is present.
+When using CMake the library is built automatically with TLS support when the folder third_party/mbedtls/mbedtls-2.28 is present.
+
+### mbedtls 3.6
+
+Alternatively you can also use mbedtls 3.6.
+
+Download, unpack, and copy mbedtls-3.6.0 into the third_party/mbedtls folder
+
+In the main libiec61850 folder run
+
+```
+make WITH_MBEDTLS3=1
+```
+
+When using CMake the library is built automatically with TLS support when the folder third_party/mbedtls/mbedtls-3.6.0 is present.
 
 ## Installing the library and the API headers
 
@@ -119,7 +141,7 @@ For the cmake build script you have to provide the CMAKE_INSTALL_PREFIX variable
 
 ## Building on windows with GOOSE support
 
-To build the library and run libiec61850 applications with GOOSE support on Windows (7/8/10) the use of a third-party library (winpcap) is required. This is necessary because current versions of Windows have no working support for raw sockets. You can download winpcap here (http://www.winpcap.org).
+To build the library and run libiec61850 applications with GOOSE support on Windows (10/11) the use of a third-party library (winpcap) is required. This is necessary because current versions of Windows have no working support for raw sockets. You can download winpcap here (http://www.winpcap.org).
 
 1. Download and install winpcap. Make sure that the winpcap driver is loaded at boot time (you can choose this option at the last screen of the winpcap installer).
 2. Reboot the system (you can do this also later, but you need to reboot or load the winpcap driver before running any llibiec61850 applications that use GOOSE).
@@ -127,6 +149,27 @@ To build the library and run libiec61850 applications with GOOSE support on Wind
 4. Unpack the zip file. Copy the folders Lib and Include from the WpdPack directory in the third_party/winpcap directory of libiec61850
 
 ## Building with the cmake build script
+
+### Build on Linux
+
+You have to install the build tools and cmake (e.g. the packages "build-essental" and "cmake" on Ubuntu 20.04)
+
+Execute the following commands:
+
+`mkdir build`
+
+`cd build`
+
+`cmake ..`
+
+`make`
+
+Optionally execute the following stop to install the library and header files in system directories:
+
+`sudo make install`
+
+
+### Build on Windows with Visual Studio
 
 With the help of the cmake build script it is possible to create platform independent project descriptions and let cmake create specific project or build files for other tools like Make or Visual Studio.
 
@@ -189,10 +232,3 @@ Support and commercial license options are provided by MZ Automation GmbH. Pleas
 If you want to contribute to the improvement and development of the library please send me comments, feature requests, bug reports, or patches. For more than trivial contributions I require you to sign a Contributor License Agreement. Please contact info@libiec61850.com.
 
 Please don't send pull requests before signing the Contributor License Agreement! Such pull requests may be silently ignored.
-
-## Third-party contributions
-
-- The Mac OS X socket and ethernet layer has been kindly contributed by Michael Clausen, HES-SO Valais-Wallis, http://www.hevs.ch 
-
-
-

@@ -53,8 +53,12 @@ typedef struct {
     LogicalNode* parentLN;
 
     MmsValue* rcbValues;
+
+#if (CONFIG_MMS_THREADLESS_STACK != 1)
+    Semaphore rcbValuesLock;
+#endif
+
     MmsValue* inclusionField;
-    MmsValue* confRev;
 
     DataSet* dataSet;
     bool isDynamicDataSet;
@@ -107,6 +111,7 @@ typedef struct {
     MmsValue* timeOfEntry;
 
     ReportControlBlock* rcb;
+    ReportControlBlock* sibling; /* backup sibling field of original ReportControlBlock */
 
     IedServer server;
 } ReportControl;
@@ -121,7 +126,7 @@ LIB61850_INTERNAL void
 ReportControl_valueUpdated(ReportControl* self, int dataSetEntryIndex, int flag, bool modelLocked);
 
 LIB61850_INTERNAL MmsValue*
-ReportControl_getRCBValue(ReportControl* rc, char* elementName);
+ReportControl_getRCBValue(ReportControl* rc, const char* elementName);
 
 LIB61850_INTERNAL MmsVariableSpecification*
 Reporting_createMmsBufferedRCBs(MmsMapping* self, MmsDomain* domain,
@@ -132,11 +137,11 @@ Reporting_createMmsUnbufferedRCBs(MmsMapping* self, MmsDomain* domain,
         LogicalNode* logicalNode, int reportsCount);
 
 LIB61850_INTERNAL MmsDataAccessError
-Reporting_RCBWriteAccessHandler(MmsMapping* self, ReportControl* rc, char* elementName, MmsValue* value,
+Reporting_RCBWriteAccessHandler(MmsMapping* self, ReportControl* rc, const char* elementName, MmsValue* value,
         MmsServerConnection connection);
 
-LIB61850_INTERNAL void
-ReportControl_readAccess(ReportControl* rc, MmsMapping* mmsMapping, char* elementName);
+LIB61850_INTERNAL bool
+ReportControl_readAccess(ReportControl* rc, MmsMapping* mmsMapping, MmsServerConnection connection, char* elementName);
 
 LIB61850_INTERNAL void
 Reporting_activateBufferedReports(MmsMapping* self);
@@ -152,6 +157,9 @@ Reporting_processReportEventsAfterUnlock(MmsMapping* self);
 /* send reports in report buffer */
 LIB61850_INTERNAL void
 Reporting_sendReports(MmsMapping* self, MmsServerConnection connection);
+
+LIB61850_INTERNAL void
+Reporting_deactivateAllReports(MmsMapping* self);
 
 LIB61850_INTERNAL void
 Reporting_deactivateReportsForConnection(MmsMapping* self, MmsServerConnection connection);

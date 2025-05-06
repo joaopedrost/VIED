@@ -15,9 +15,6 @@
 
 #include "static_model.h"
 
-/* import IEC 61850 device model created from SCL-File */
-extern IedModel iedModel;
-
 static int running = 0;
 static IedServer iedServer = NULL;
 
@@ -69,7 +66,6 @@ controlHandlerForBinaryOutput(ControlAction action, void* parameter, MmsValue* v
     return CONTROL_RESULT_OK;
 }
 
-
 static void
 connectionHandler (IedServer self, ClientConnection connection, bool connected, void* parameter)
 {
@@ -79,9 +75,38 @@ connectionHandler (IedServer self, ClientConnection connection, bool connected, 
         printf("Connection closed\n");
 }
 
+static void
+rcbEventHandler(void* parameter, ReportControlBlock* rcb, ClientConnection connection, IedServer_RCBEventType event, const char* parameterName, MmsDataAccessError serviceError)
+{
+    printf("RCB: %s event: %i\n", ReportControlBlock_getName(rcb), event);
+
+    if ((event == RCB_EVENT_SET_PARAMETER) || (event == RCB_EVENT_GET_PARAMETER))
+    {
+        printf("  param:  %s\n", parameterName);
+        printf("  result: %i\n", serviceError);
+    }
+
+    if (event == RCB_EVENT_ENABLE)
+    {
+        char* rptId = ReportControlBlock_getRptID(rcb);
+        printf("   rptID:  %s\n", rptId);
+        char* dataSet = ReportControlBlock_getDataSet(rcb);
+        printf("   datSet: %s\n", dataSet);
+
+        free(rptId);
+        free(dataSet);
+    }
+}
+
 int
 main(int argc, char** argv)
 {
+    int tcpPort = 102;
+
+    if (argc > 1) {
+        tcpPort = atoi(argv[1]);
+    }
+
     printf("Using libIEC61850 version %s\n", LibIEC61850_getVersionString());
 
     /* Create new server configuration object */
@@ -115,7 +140,7 @@ main(int argc, char** argv)
     IedServerConfig_destroy(config);
 
     /* set the identity values for MMS identify service */
-    IedServer_setServerIdentity(iedServer, "MZ", "basic io", "1.4.2");
+    IedServer_setServerIdentity(iedServer, "MZ", "basic io", "1.6.0");
 
     /* Install handler for operate command */
     IedServer_setControlHandler(iedServer, IEDMODEL_GenericIO_GGIO1_SPCSO1,
@@ -136,6 +161,8 @@ main(int argc, char** argv)
 
     IedServer_setConnectionIndicationHandler(iedServer, (IedConnectionIndicationHandler) connectionHandler, NULL);
 
+    IedServer_setRCBEventHandler(iedServer, rcbEventHandler, NULL);
+
     /* By default access to variables with FC=DC and FC=CF is not allowed.
      * This allow to write to simpleIOGenericIO/GGIO1.NamPlt.vendor variable used
      * by iec61850_client_example1.
@@ -143,9 +170,10 @@ main(int argc, char** argv)
     IedServer_setWriteAccessPolicy(iedServer, IEC61850_FC_DC, ACCESS_POLICY_ALLOW);
 
     /* MMS server will be instructed to start listening for client connections. */
-    IedServer_start(iedServer, 102);
+    IedServer_start(iedServer, tcpPort);
 
-    if (!IedServer_isRunning(iedServer)) {
+    if (!IedServer_isRunning(iedServer))
+    {
         printf("Starting server failed (maybe need root permissions or another server is already using the port)! Exit.\n");
         IedServer_destroy(iedServer);
         exit(-1);
@@ -157,7 +185,8 @@ main(int argc, char** argv)
 
     float t = 0.f;
 
-    while (running) {
+    while (running)
+    {
         uint64_t timestamp = Hal_getTimeInMs();
 
         t += 0.1f;
@@ -177,6 +206,7 @@ main(int argc, char** argv)
         if (((int) t % 2) == 0)
             Timestamp_setClockNotSynchronized(&iecTimestamp, true);
 
+#if 1
         IedServer_lockDataModel(iedServer);
 
         IedServer_updateTimestampAttributeValue(iedServer, IEDMODEL_GenericIO_GGIO1_AnIn1_t, &iecTimestamp);
@@ -192,6 +222,7 @@ main(int argc, char** argv)
         IedServer_updateFloatAttributeValue(iedServer, IEDMODEL_GenericIO_GGIO1_AnIn4_mag_f, an4);
 
         IedServer_unlockDataModel(iedServer);
+#endif
 
         Thread_sleep(100);
     }

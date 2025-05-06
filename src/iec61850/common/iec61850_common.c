@@ -1,7 +1,7 @@
 /*
  * iec61850_common.c
  *
- *  Copyright 2013-2020 Michael Zillgith
+ *  Copyright 2013-2022 Michael Zillgith
  *
  *  This file is part of libIEC61850.
  *
@@ -68,6 +68,20 @@ Quality
 Quality_fromMmsValue(const MmsValue* mmsValue)
 {
     return (Quality) MmsValue_getBitStringAsInteger(mmsValue);
+}
+
+MmsValue*
+Quality_toMmsValue(Quality* self, MmsValue* mmsValue)
+{
+    if (mmsValue == NULL) {
+        mmsValue = MmsValue_newBitString(13);
+    }
+
+    if (mmsValue) {
+        MmsValue_setBitStringFromInteger(mmsValue, *self);
+    }
+
+    return mmsValue;
 }
 
 Dbpos
@@ -242,7 +256,7 @@ Timestamp_create()
 }
 
 Timestamp*
-Timestamp_createFromByteArray(uint8_t* byteArray)
+Timestamp_createFromByteArray(const uint8_t* byteArray)
 {
     Timestamp* self = Timestamp_create();
 
@@ -405,6 +419,35 @@ Timestamp_setTimeInNanoseconds(Timestamp* self, nsSinceEpoch nsTime)
     /* don't touch time quality */
 }
 
+void
+Timestamp_setFractionOfSecondPart(Timestamp* self, uint32_t fractionOfSecond)
+{
+    uint8_t* valueArray = self->val;
+
+    valueArray[4] = ((fractionOfSecond >> 16) & 0xff);
+    valueArray[5] = ((fractionOfSecond >> 8) & 0xff);
+    valueArray[6] = (fractionOfSecond & 0xff);
+}
+
+uint32_t
+Timestamp_getFractionOfSecondPart(Timestamp* self)
+{
+    uint32_t fractionOfSecond = 0;
+    uint8_t* valueArray = self->val;
+
+    fractionOfSecond = (valueArray[4] << 16);
+    fractionOfSecond += (valueArray[5] << 8);
+    fractionOfSecond += (valueArray[6]);
+
+    return fractionOfSecond;
+}
+
+float
+Timestamp_getFractionOfSecond(Timestamp* self)
+{
+    return (float)((float)Timestamp_getFractionOfSecondPart(self) / (float)(1 << 24));
+}
+
 uint32_t
 Timestamp_getTimeInSeconds(Timestamp* self)
 {
@@ -471,7 +514,7 @@ Timestamp_getTimeInNs(Timestamp* self)
 }
 
 void
-Timestamp_setByMmsUtcTime(Timestamp* self, MmsValue* mmsValue)
+Timestamp_setByMmsUtcTime(Timestamp* self, const MmsValue* mmsValue)
 {
     if (MmsValue_getType(mmsValue) == MMS_UTC_TIME)
         memcpy(self->val, mmsValue->value.utcTime, 8);
@@ -489,6 +532,25 @@ Timestamp_toMmsValue(Timestamp* self, MmsValue* mmsValue)
         memcpy(convertedValue->value.utcTime, self->val, 8);
 
     return convertedValue;
+}
+
+Timestamp*
+Timestamp_fromMmsValue(Timestamp* self, MmsValue* mmsValue)
+{
+    if (mmsValue->type == MMS_UTC_TIME) {
+
+        if (self == NULL)
+            self = Timestamp_create();
+
+        if (self) {
+            memcpy(self->val, mmsValue->value.utcTime, 8);
+        }
+
+        return self;
+    }
+    else {
+        return NULL;
+    }
 }
 
 char*
@@ -559,20 +621,16 @@ MmsMapping_createMmsVariableNameFromObjectReference(const char* objectReference,
     else
         i++;
 
-
     if (fc == IEC61850_FC_NONE) {
-
-        int len = objRefLength - i;
 
         char* mmsVariableName;
 
         if (buffer == NULL)
-            mmsVariableName = (char*) GLOBAL_MALLOC(len + 1);
+            mmsVariableName = (char*) GLOBAL_MALLOC(65);
         else
             mmsVariableName = buffer;
 
-        strncpy(mmsVariableName, objectReference + i, len);
-		mmsVariableName[len] = 0;
+        StringUtils_copyStringMax(mmsVariableName, 65, objectReference + i);
 
         return mmsVariableName;
     }
@@ -709,7 +767,6 @@ MmsMapping_ObjectReferenceToVariableAccessSpec(char* objectReference)
 
     return accessSpec;
 }
-
 
 static int
 getNumberOfDigits(int value)

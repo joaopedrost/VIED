@@ -59,7 +59,7 @@ main(int argc, char** argv)
         GooseReceiver_setInterfaceId(receiver, "eth0");
     }
 
-    GooseSubscriber subscriber = GooseSubscriber_create("simpleIOGenericIO/LLN0$GO$gcbAnalogValues", "simpleIOGenericIO/LLN0$AnalogValues");
+    GooseSubscriber subscriber = GooseSubscriber_create("simpleIOGenericIO/LLN0$GO$gcbAnalogValues", NULL);
 
     uint8_t dstMac[6] = {0x01,0x0c,0xcd,0x01,0x00,0x01};
     GooseSubscriber_setDstMac(subscriber, dstMac);

@@ -55,6 +55,21 @@ typedef struct {
     uint8_t dstAddress[6];
 } PhyComAddress;
 
+/** IEC 61850 ACSI classes */
+typedef enum {
+    ACSI_CLASS_DATA_OBJECT,
+    ACSI_CLASS_DATA_SET,
+    ACSI_CLASS_BRCB,
+    ACSI_CLASS_URCB,
+    ACSI_CLASS_LCB,
+    ACSI_CLASS_LOG,
+    ACSI_CLASS_SGCB,
+    ACSI_CLASS_GoCB,
+    ACSI_CLASS_GsCB,
+    ACSI_CLASS_MSVCB,
+    ACSI_CLASS_USVCB
+} ACSIClass;
+
 /**
  * \brief Control model (represented by "ctlModel" attribute)
  */
@@ -241,25 +256,6 @@ typedef enum {
  * @{
  */
 
-#if (CONFIG_PROVIDE_OLD_FC_DEFINES == 1)
-#define ST IEC61850_FC_ST
-#define MX IEC61850_FC_MX
-#define SP IEC61850_FC_SP
-#define SV IEC61850_FC_SV
-#define CF IEC61850_FC_CF
-#define DC IEC61850_FC_DC
-#define SG IEC61850_FC_SG
-#define SE IEC61850_FC_SE
-#define SR IEC61850_FC_SR
-#define OR IEC61850_FC_OR
-#define BL IEC61850_FC_BL
-#define EX IEC61850_FC_EX
-#define CO IEC61850_FC_CO
-#define ALL IEC61850_FC_ALL
-#define NONE IEC61850_FC_NONE
-#endif /* (CONFIG_PROVIDE_OLD_FC_DEFINES == 1) */
-
-
 /** FCs (Functional constraints) according to IEC 61850-7-2 */
 typedef enum eFunctionalConstraint {
     /** Status information */
@@ -370,6 +366,9 @@ Quality_isFlagSet(Quality* self, int flag);
 LIB61850_API Quality
 Quality_fromMmsValue(const MmsValue* mmsValue);
 
+LIB61850_API MmsValue*
+Quality_toMmsValue(Quality* self, MmsValue* mmsValue);
+
 /** @} */
 
 /**
@@ -423,7 +422,7 @@ LIB61850_API Timestamp*
 Timestamp_create(void);
 
 LIB61850_API Timestamp*
-Timestamp_createFromByteArray(uint8_t* byteArray);
+Timestamp_createFromByteArray(const uint8_t* byteArray);
 
 LIB61850_API void
 Timestamp_destroy(Timestamp* self);
@@ -460,6 +459,15 @@ Timestamp_setClockNotSynchronized(Timestamp* self, bool value);
 
 LIB61850_API int
 Timestamp_getSubsecondPrecision(Timestamp* self);
+
+LIB61850_API void
+Timestamp_setFractionOfSecondPart(Timestamp* self, uint32_t fractionOfSecond);
+
+LIB61850_API uint32_t
+Timestamp_getFractionOfSecondPart(Timestamp* self);
+
+LIB61850_API float
+Timestamp_getFractionOfSecond(Timestamp* self);
 
 /**
  * \brief Set the subsecond precision value of the time stamp
@@ -504,7 +512,7 @@ LIB61850_API void
 Timestamp_setTimeInNanoseconds(Timestamp* self, nsSinceEpoch nsTime);
 
 LIB61850_API void
-Timestamp_setByMmsUtcTime(Timestamp* self, MmsValue* mmsValue);
+Timestamp_setByMmsUtcTime(Timestamp* self, const MmsValue* mmsValue);
 
 /**
  * \brief Set an MmsValue instance of type UTCTime to the timestamp value
@@ -514,6 +522,17 @@ Timestamp_setByMmsUtcTime(Timestamp* self, MmsValue* mmsValue);
  */
 LIB61850_API MmsValue*
 Timestamp_toMmsValue(Timestamp* self, MmsValue* mmsValue);
+
+/**
+ * \brief Get the Timestamp value from an MmsValue instance of type MMS_UTC_TIME
+ *
+ * \param self the Timestamp instance or NULL to create a new instance
+ * \param mmsValue the mmsValue instance of type MMS_UTC_TIME
+ *
+ * \return the updated Timestamp value or NULL in case of an error
+ */
+LIB61850_API Timestamp*
+Timestamp_fromMmsValue(Timestamp* self, MmsValue* mmsValue);
 
 /**
  * \brief Get the version of the library as string

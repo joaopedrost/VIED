@@ -1,24 +1,10 @@
 /*
  *  serial_port_linux.c
  *
- *  Copyright 2017 MZ Automation GmbH
+ *  Copyright 2013-2021 Michael Zillgith
  *
- *  This file is part of lib60870-C
- *
- *  lib60870-C is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  lib60870-C is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with lib60870-C.  If not, see <http://www.gnu.org/licenses/>.
- *
- *  See COPYING file for the complete license text.
+ *  This file is part of Platform Abstraction Layer (libpal)
+ *  for libiec61850, libmms, and lib60870.
  */
 
 #include "lib_memory.h"
@@ -31,6 +17,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/select.h>
+#include <poll.h>
 
 #include "hal_serial.h"
 #include "hal_time.h"
@@ -43,10 +30,9 @@ struct sSerialPort {
     char parity;
     uint8_t stopBits;
     uint64_t lastSentTime;
-    struct timeval timeout;
+    int timeout;
     SerialPortError lastError;
 };
-
 
 SerialPort
 SerialPort_create(const char* interfaceName, int baudRate, uint8_t dataBits, char parity, uint8_t stopBits)
@@ -60,8 +46,7 @@ SerialPort_create(const char* interfaceName, int baudRate, uint8_t dataBits, cha
         self->stopBits = stopBits;
         self->parity = parity;
         self->lastSentTime = 0;
-        self->timeout.tv_sec = 0;
-        self->timeout.tv_usec = 100000; /* 100 ms */
+        self->timeout = 100; /* 100 ms */
         strncpy(self->interfaceName, interfaceName, 99);
         self->lastError = SERIAL_PORT_ERROR_NONE;
     }
@@ -226,8 +211,7 @@ SerialPort_discardInBuffer(SerialPort self)
 void
 SerialPort_setTimeout(SerialPort self, int timeout)
 {
-    self->timeout.tv_sec = timeout / 1000;
-    self->timeout.tv_usec = (timeout % 1000) * 1000;
+    self->timeout = timeout;
 }
 
 SerialPortError
@@ -240,14 +224,14 @@ int
 SerialPort_readByte(SerialPort self)
 {
     uint8_t buf[1];
-    fd_set set;
+    struct pollfd fds[1];
 
     self->lastError = SERIAL_PORT_ERROR_NONE;
 
-    FD_ZERO(&set);
-    FD_SET(self->fd, &set);
+    fds[0].fd = self->fd;
+    fds[0].events = POLLIN;
 
-    int ret = select(self->fd + 1, &set, NULL, NULL, &(self->timeout));
+    int ret = poll(fds, 1, self->timeout);
 
     if (ret == -1) {
         self->lastError = SERIAL_PORT_ERROR_UNKNOWN;

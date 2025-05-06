@@ -1,30 +1,16 @@
 /*
  *  socket_bsd.c
  *
- *  Copyright 2013-2020 Michael Zillgith
- *  contributions by Michael Clausen (School of engineering Valais).
+ *  Copyright 2013-2021 Michael Zillgith
  *
- *  This file is part of libIEC61850.
- *
- *  libIEC61850 is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  libIEC61850 is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with libIEC61850.  If not, see <http://www.gnu.org/licenses/>.
- *
- *  See COPYING file for the complete license text.
+ *  This file is part of Platform Abstraction Layer (libpal)
+ *  for libiec61850, libmms, and lib60870.
  */
 
 #include "hal_socket.h"
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/select.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
@@ -47,6 +33,10 @@
 #define DEBUG_SOCKET 0
 #endif
 
+#ifndef IPV6_ADD_MEMBERSHIP
+#define IPV6_ADD_MEMBERSHIP IPV6_JOIN_GROUP
+#endif
+
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
@@ -59,6 +49,11 @@ struct sSocket {
 struct sServerSocket {
     int fd;
     int backLog;
+};
+
+struct sUdpSocket {
+    int fd;
+    int namespace; /* IPv4: AF_INET; IPv6: AF_INET6 */
 };
 
 struct sHandleSet {
@@ -199,7 +194,7 @@ Socket_activateTcpKeepAlive(Socket self, int idleTime, int interval, int count)
 }
 
 static bool
-prepareServerAddress(const char* address, int port, struct sockaddr_in* sockaddr)
+prepareAddress(const char* address, int port, struct sockaddr_in* sockaddr)
 {
 
 	memset((char *) sockaddr , 0, sizeof(struct sockaddr_in));
@@ -246,7 +241,7 @@ TcpServerSocket_create(const char* address, int port)
     if ((fd = socket(AF_INET, SOCK_STREAM, 0)) >= 0) {
         struct sockaddr_in serverAddress;
 
-        if (!prepareServerAddress(address, port, &serverAddress)) {
+        if (!prepareAddress(address, port, &serverAddress)) {
             close(fd);
             return NULL;
         }
@@ -257,7 +252,7 @@ TcpServerSocket_create(const char* address, int port)
         if (bind(fd, (struct sockaddr *) &serverAddress, sizeof(serverAddress)) >= 0) {
             serverSocket = (ServerSocket) GLOBAL_MALLOC(sizeof(struct sServerSocket));
             serverSocket->fd = fd;
-            serverSocket->backLog = 0;
+            serverSocket->backLog = 2;
 
             setSocketNonBlocking((Socket) serverSocket);
         }
@@ -292,6 +287,8 @@ ServerSocket_accept(ServerSocket self)
 
         if (conSocket) {
             conSocket->fd = fd;
+
+            setSocketNonBlocking(conSocket);
 
             activateTcpNoDelay(conSocket);
         }
@@ -345,7 +342,7 @@ ServerSocket_destroy(ServerSocket self)
 Socket
 TcpSocket_create()
 {
-    Socket self = NULL;
+    Socket self = (Socket)NULL;
 
     int sock = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -368,7 +365,6 @@ TcpSocket_create()
             if (DEBUG_SOCKET)
                 printf("SOCKET: out of memory\n");
         }
-
     }
     else {
         if (DEBUG_SOCKET)
@@ -385,15 +381,24 @@ Socket_setConnectTimeout(Socket self, uint32_t timeoutInMs)
 }
 
 bool
-Socket_setLocalAddress(Socket self, const char* address, int port)
+Socket_bind(Socket self, const char* srcAddress, int srcPort)
 {
-    struct sockaddr_in clientAddress;
+    struct sockaddr_in localAddress;
 
-    if (!prepareServerAddress(address, port, &clientAddress))
+    if (!prepareAddress(srcAddress, srcPort, &localAddress))
         return false;
 
-    if (bind(self->fd, (struct sockaddr *) &clientAddress, sizeof(clientAddress)) != 0)
+    int result = bind(self->fd, (struct sockaddr*)&localAddress, sizeof(localAddress));
+
+    if (result == -1) {
+        if (DEBUG_SOCKET)
+            printf("SOCKET: failed to bind TCP socket (errno=%i)\n", errno);
+
+        close(self->fd);
+        self->fd = -1;
+
         return false;
+    }    
 
     return true;
 }
@@ -406,7 +411,7 @@ Socket_connectAsync(Socket self, const char* address, int port)
     if (DEBUG_SOCKET)
         printf("SOCKET: connect: %s:%i\n", address, port);
 
-    if (!prepareServerAddress(address, port, &serverAddress))
+    if (!prepareAddress(address, port, &serverAddress))
         return false;
 
     fd_set fdSet;
@@ -649,4 +654,239 @@ Socket_destroy(Socket self)
     Thread_sleep(10);
 
     GLOBAL_FREEMEM(self);
+}
+
+static UdpSocket
+UdpSocket_createUsingNamespace(int namespace)
+{
+    UdpSocket self = NULL;
+
+    int sock = socket(namespace, SOCK_DGRAM, IPPROTO_UDP);
+
+    if (sock != -1) {
+        self = (UdpSocket) GLOBAL_MALLOC(sizeof(struct sSocket));
+
+        if (self) {
+            self->fd = sock;
+            self->namespace = namespace;
+        }
+        else {
+            if (DEBUG_SOCKET)
+                printf("SOCKET: failed to allocate memory\n");
+
+            close(sock);
+        }
+    }
+    else {
+        if (DEBUG_SOCKET)
+            printf("SOCKET: failed to create UDP socket (errno=%i)\n", errno);
+    }
+
+    return self;
+}
+
+UdpSocket
+UdpSocket_create()
+{
+    return UdpSocket_createUsingNamespace(AF_INET);
+}
+
+UdpSocket
+UdpSocket_createIpV6()
+{
+    return UdpSocket_createUsingNamespace(AF_INET6);
+}
+
+bool
+UdpSocket_addGroupMembership(UdpSocket self, const char* multicastAddress)
+{
+    if (self->namespace == AF_INET) {
+        struct ip_mreq mreq;
+
+        if (!inet_aton(multicastAddress, &(mreq.imr_multiaddr))) {
+            printf("SOCKET: Invalid IPv4 multicast address\n");
+            return false;
+        }
+        else {
+            mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+
+            if (setsockopt(self->fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) == -1) {
+                printf("SOCKET: failed to set IPv4 multicast group (errno: %i)\n", errno);
+                return false;
+            }
+
+        }
+
+        return true;
+    }
+    else if (self->namespace == AF_INET6) {
+        struct ipv6_mreq mreq;
+
+        if (inet_pton(AF_INET6, multicastAddress, &(mreq.ipv6mr_multiaddr)) < 1) {
+            printf("SOCKET: failed to set IPv6 multicast group (errno: %i)\n", errno);
+            return false;
+        }
+
+        mreq.ipv6mr_interface = 0;
+
+        if (setsockopt(self->fd, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) == -1) {
+            printf("SOCKET: failed to set IPv6 multicast group (errno: %i)\n", errno);
+            return false;
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+bool
+UdpSocket_setMulticastTtl(UdpSocket self, int ttl)
+{
+    if (self->namespace == AF_INET) {
+        if (setsockopt(self->fd, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl)) == -1) {
+            printf("SOCKET: failed to set IPv4 multicast TTL (errno: %i)\n", errno);
+            return false;
+        }
+
+        return true;
+    }
+    else if (self->namespace == AF_INET6) {
+        if (setsockopt(self->fd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &ttl, sizeof(ttl)) == -1) {
+            printf("SOCKET: failed to set IPv6 multicast TTL(hops) (errno: %i)\n", errno);
+            return false;
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+bool
+UdpSocket_bind(UdpSocket self, const char* address, int port)
+{
+    //TODO add support for IPv6
+    struct sockaddr_in localAddress;
+
+    if (!prepareAddress(address, port, &localAddress)) {
+        close(self->fd);
+        self->fd = 0;
+        return false;
+    }
+
+    int result = bind(self->fd, (struct sockaddr*)&localAddress, sizeof(localAddress));
+
+    if (result == -1) {
+        if (DEBUG_SOCKET)
+            printf("SOCKET: failed to bind UDP socket (errno=%i)\n", errno);
+
+        close(self->fd);
+        self->fd = 0;
+
+        return false;
+    }
+
+    return true;
+}
+
+bool
+UdpSocket_sendTo(UdpSocket self, const char* address, int port, uint8_t* msg, int msgSize)
+{
+    //TODO add support for IPv6
+    struct sockaddr_in remoteAddress;
+
+    if (!prepareAddress(address, port, &remoteAddress)) {
+
+        if (DEBUG_SOCKET)
+            printf("SOCKET: failed to lookup remote address %s\n", address);
+
+        return false;
+    }
+
+    int result = sendto(self->fd, msg, msgSize, 0, (struct sockaddr*)&remoteAddress, sizeof(remoteAddress));
+
+    if (result == msgSize) {
+        return true;
+    }
+    else if (result == -1) {
+        if (DEBUG_SOCKET)
+            printf("SOCKET: failed to send UDP message (errno=%i)\n", errno);
+    }
+    else {
+        if (DEBUG_SOCKET)
+            printf("SOCKET: failed to send UDP message (insufficient data sent)\n");
+    }
+
+    return false;
+}
+
+int
+UdpSocket_receiveFrom(UdpSocket self, char* address, int maxAddrSize, uint8_t* msg, int msgSize)
+{
+    //TODO add support for IPv6
+    struct sockaddr_storage remoteAddress;
+
+    socklen_t structSize = sizeof(struct sockaddr_storage);
+
+    int result = recvfrom(self->fd, msg, msgSize, MSG_DONTWAIT, (struct sockaddr*)&remoteAddress, &structSize);
+
+    if (result == -1) {
+        if (DEBUG_SOCKET)
+            printf("SOCKET: failed to receive UDP message (errno=%i)\n", errno);
+    }
+
+    if (address) {
+        bool isIPv6;
+        char addrString[INET6_ADDRSTRLEN + 7];
+        int port;
+
+        if (remoteAddress.ss_family == AF_INET) {
+            struct sockaddr_in* ipv4Addr = (struct sockaddr_in*) &remoteAddress;
+            port = ntohs(ipv4Addr->sin_port);
+            inet_ntop(AF_INET, &(ipv4Addr->sin_addr), addrString, INET_ADDRSTRLEN);
+            isIPv6 = false;
+        }
+        else if (remoteAddress.ss_family == AF_INET6) {
+            struct sockaddr_in6* ipv6Addr = (struct sockaddr_in6*) &remoteAddress;
+            port = ntohs(ipv6Addr->sin6_port);
+            inet_ntop(AF_INET6, &(ipv6Addr->sin6_addr), addrString, INET6_ADDRSTRLEN);
+            isIPv6 = true;
+        }
+        else
+            return -1;
+
+        if (isIPv6)
+            snprintf(address, maxAddrSize, "[%s]:%i", addrString, port);
+        else
+            snprintf(address, maxAddrSize, "%s:%i", addrString, port);
+    }
+
+    if (address) {
+        bool isIPv6;
+        char addrString[INET6_ADDRSTRLEN + 7];
+        int port;
+
+        if (remoteAddress.ss_family == AF_INET) {
+            struct sockaddr_in* ipv4Addr = (struct sockaddr_in*) &remoteAddress;
+            port = ntohs(ipv4Addr->sin_port);
+            inet_ntop(AF_INET, &(ipv4Addr->sin_addr), addrString, INET_ADDRSTRLEN);
+            isIPv6 = false;
+        }
+        else if (remoteAddress.ss_family == AF_INET6) {
+            struct sockaddr_in6* ipv6Addr = (struct sockaddr_in6*) &remoteAddress;
+            port = ntohs(ipv6Addr->sin6_port);
+            inet_ntop(AF_INET6, &(ipv6Addr->sin6_addr), addrString, INET6_ADDRSTRLEN);
+            isIPv6 = true;
+        }
+        else
+            return result;
+
+        if (isIPv6)
+            snprintf(address, maxAddrSize, "[%s]:%i", addrString, port);
+        else
+            snprintf(address, maxAddrSize, "%s:%i", addrString, port);
+    }
+
+    return result;
 }
